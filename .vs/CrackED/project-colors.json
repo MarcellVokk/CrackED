@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "e5f0db00-b446-420c-9804-e29deeffaeaa": {
+      "ProjectGuid": "e5f0db00-b446-420c-9804-e29deeffaeaa",
+      "DisplayName": "CrackED",
+      "ColorIndex": 0
+    },
+    "a9050492-3af6-449f-b4c2-06f77630f9eb": {
+      "ProjectGuid": "a9050492-3af6-449f-b4c2-06f77630f9eb",
+      "DisplayName": "Demo",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}

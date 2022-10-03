@@ -68,6 +68,24 @@ namespace CrackED
             BackgroundLayer.TextSearchManagger.SearchTerm = keyword;
             BackgroundLayer.Repaint();
         }
+
+        public void AddStyleSpan(int line, StyleSpan styleSpan)
+        {
+            Lines[line].StyleSpans.Add(styleSpan);
+        }
+
+        public void ClearStyleSpans(int line)
+        {
+            Lines[line].StyleSpans.Clear();
+        }
+
+        public void ClearStyleSpans()
+        {
+            for(int i = 0; i < Lines.Count; i++)
+            {
+                Lines[i].StyleSpans.Clear();
+            }
+        }
         #endregion
 
         #region Constructor
