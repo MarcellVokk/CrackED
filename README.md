@@ -1,1 +1,4 @@
-#CrackED is a performance-oriented text and code editor component for WPF.
+# CrackED
+A performance-oriented text/code editor component for WPF.
+
+
