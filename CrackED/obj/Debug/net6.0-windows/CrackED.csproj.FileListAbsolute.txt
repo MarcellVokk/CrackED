@@ -26,4 +26,4 @@ D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Layers\CaretLayer.baml
 D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Layers\MetricsLayer.baml
 D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Layers\SelectionLayer.baml
 D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Layers\TextViewLayer.baml
-D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Theme.baml
+D:\source\repos\CrackED\CrackED\obj\Debug\net6.0-windows\Resources\Theme.baml
