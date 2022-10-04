@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,12 +55,22 @@ namespace CrackED
         public new Brush Foreground = new SolidColorBrush(Color.FromArgb(255, 219, 219, 228));
         public new Brush Background = new SolidColorBrush(Color.FromArgb(255, 38, 38, 38));
 
-        public double LineHeight = 22;
+        public double LineHeight = 24;
+        public double VerticalTextOffset = -4;
 
         public double MinScrollAnimationSpeed = 360d;
         public double MaxScrollAnimationSpeed = 720d;
+        public double LinesToScroll = 3;
         public double ScrollInertia = 1.3d;
         public bool AnimateScroll = true;
+
+        public Brush CaretBrush = new SolidColorBrush(Color.FromArgb(255, 223, 202, 94));
+        public double CaretWidth = 2;
+        public double CaretBlinkInterval = 500d;
+        public double CaretBlinkTimeout = 1000d;
+
+        public double MinSelectionWidth = 5d;
+        public bool FullWidthSelections = false;
         #endregion
 
         #region Public Functions
@@ -86,8 +97,26 @@ namespace CrackED
                 Lines[i].StyleSpans.Clear();
             }
         }
+
+        public void UpdateOptions()
+        {
+            Caret.Caret_blink.Interval = CaretBlinkInterval;
+            Caret.Caret_blink_timeout.Interval = CaretBlinkTimeout;
+
+            VerticalOffset = (double)GetValue(VerticalOffsetProperty);
+            ActualVerticalOffset = VerticalOffset;
+
+            if (IsAnimating)
+            {
+                BeginAnimation(VerticalOffsetProperty, null);
+                IsAnimating = false;
+            }
+
+            TextViewLayer.Repaint(true);
+        }
         #endregion
 
+        
         #region Constructor
         public Editor()
         {
@@ -108,7 +137,7 @@ namespace CrackED
 
             Lines.Add(new VirtualLine(this));
 
-            Typeface typeface = new Typeface(new FontFamily("JetBrains Mono"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            Typeface typeface = new Typeface(new FontFamily("Hack"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 
             if (!typeface.TryGetGlyphTypeface(out Typeface))
             {
@@ -399,7 +428,7 @@ namespace CrackED
             Debug.WriteLine(position.Offset + " " + curentLine.Length);
 
             int start = curentLine.LastIndexOfAny(@" ,.()[]{};:''/\|?<>*&%$#@".ToCharArray(), Math.Min(position.Offset, curentLine.Length - 1));
-            int end = curentLine.IndexOfAny(@" ,.()[]{};:''/\|?<>*&%$#@".ToCharArray(), Math.Min(position.Offset, curentLine.Length - 1));
+            int end = curentLine.IndexOfAny(@" ,.()[]{};:''/\|?<>*&%$#@".ToCharArray(), Math.Max(0, Math.Min(position.Offset, curentLine.Length - 1)));
 
             start = start == -1 ? 0 : start + 1;
             end = end == -1 ? curentLine.Length : end;
@@ -415,42 +444,30 @@ namespace CrackED
         {
             if (AnimateScroll)
             {
-                //DrawMetrics(Math.Min(Math.Max(Math.Abs(ActualVerticalOffset - VerticalOffset) * ScrollInertia, MinScrollAnimationSpeed), MaxScrollAnimationSpeed).ToString());
-
                 IsAnimating = true;
 
                 if (e.Delta < 0)
                 {
-                    ActualVerticalOffset = Math.Min(ActualVerticalOffset + 3 * LineHeight, Math.Max(0, (Lines.Count - LinesOnScreen) * LineHeight));
+                    ActualVerticalOffset = Math.Min(ActualVerticalOffset + LinesToScroll * LineHeight, Math.Max(0, (Lines.Count - LinesOnScreen) * LineHeight));
 
-                    ScrollingHelper.AnimateScroll(this, ActualVerticalOffset, (s, args) =>
-                    {
-                        //IsAnimating = false;
-                    }, Math.Min(Math.Max(Math.Abs(ActualVerticalOffset - VerticalOffset) * ScrollInertia, MinScrollAnimationSpeed), MaxScrollAnimationSpeed), 0.1);
+                    ScrollingHelper.AnimateScroll(this, ActualVerticalOffset, Math.Min(Math.Max(Math.Abs(ActualVerticalOffset - VerticalOffset) * ScrollInertia, MinScrollAnimationSpeed), MaxScrollAnimationSpeed), 0.1);
                 }
                 else if (e.Delta > 0)
                 {
-                    ActualVerticalOffset = Math.Max(0, ActualVerticalOffset - 3 * LineHeight);
+                    ActualVerticalOffset = Math.Max(0, ActualVerticalOffset - LinesToScroll * LineHeight);
 
-                    ScrollingHelper.AnimateScroll(this, ActualVerticalOffset, (s, args) =>
-                    {
-                        //IsAnimating = false;
-                    }, Math.Min(Math.Max(Math.Abs(ActualVerticalOffset - VerticalOffset) * ScrollInertia, MinScrollAnimationSpeed), MaxScrollAnimationSpeed), 0.1);
+                    ScrollingHelper.AnimateScroll(this, ActualVerticalOffset, Math.Min(Math.Max(Math.Abs(ActualVerticalOffset - VerticalOffset) * ScrollInertia, MinScrollAnimationSpeed), MaxScrollAnimationSpeed), 0.1);
                 }
             }
             else
             {
                 if (e.Delta < 0)
                 {
-                    VerticalOffset = Math.Min(VerticalOffset + 3 * LineHeight, Math.Max(0, (Lines.Count - LinesOnScreen) * LineHeight));
-
-                    //TextViewLayer.Repaint(true);
+                    VerticalOffset = Math.Min(VerticalOffset + LinesToScroll * LineHeight, Math.Max(0, (Lines.Count - LinesOnScreen) * LineHeight));
                 }
                 else if (e.Delta > 0)
                 {
-                    VerticalOffset = Math.Max(0, VerticalOffset - 3 * LineHeight);
-
-                    //TextViewLayer.Repaint(true);
+                    VerticalOffset = Math.Max(0, VerticalOffset - LinesToScroll * LineHeight);
                 }
             }
         }

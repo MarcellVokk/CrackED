@@ -23,7 +23,12 @@ namespace Demo
         public MainWindow()
         {
             InitializeComponent();
-            Editor.SerachForAll("a");
+            Editor.SerachForAll("");
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
     }
 }

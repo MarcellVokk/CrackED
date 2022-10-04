@@ -56,8 +56,6 @@ namespace CrackED
                 TextSearchManagger.Draw(ref drawingContext);
 
                 sw.Stop();
-
-                //Owner.DrawMetrics(sw.Elapsed.TotalMilliseconds.ToString() + " ms");
             }
         }
     }

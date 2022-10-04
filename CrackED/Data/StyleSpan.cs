@@ -12,6 +12,7 @@ namespace CrackED
         public int Start { get; set; } = 0;
         public int Lenght { get; set; } = 0;
         public Brush Foreground { get; set; }
+        public bool IsBold { get; set; } = false;
 
         public StyleSpan(int start, int lenght, Brush foreground)
         {

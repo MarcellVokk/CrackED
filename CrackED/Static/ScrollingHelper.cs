@@ -10,34 +10,17 @@ namespace CrackED
 {
     public static class ScrollingHelper
     {
-		private static DoubleAnimationUsingKeyFrames LastAppliedAnimation;
-		private static EventHandler LastAppliedAnimation_onCompleted;
-
-		public static void AnimateScroll(Editor editor, double ToValue, EventHandler onCompleted = null, double time = 200, double acceleration = 1)
+		public static void AnimateScroll(Editor editor, double ToValue, double time = 200, double acceleration = 1)
 		{
-			if (LastAppliedAnimation != null && LastAppliedAnimation_onCompleted != null)
-			{
-				LastAppliedAnimation.Completed -= LastAppliedAnimation_onCompleted;
-			}
+			DoubleAnimationUsingKeyFrames keyFramesAnimation = new DoubleAnimationUsingKeyFrames() { AccelerationRatio = acceleration, FillBehavior = FillBehavior.HoldEnd, Duration = TimeSpan.FromMilliseconds(time) };
 
-			DoubleAnimationUsingKeyFrames keyFramesAnimation = new DoubleAnimationUsingKeyFrames() { AccelerationRatio = acceleration };
-			keyFramesAnimation.FillBehavior = FillBehavior.HoldEnd;
-			keyFramesAnimation.Duration = TimeSpan.FromMilliseconds(time);
 			keyFramesAnimation.KeyFrames.Add(
 				new SplineDoubleKeyFrame(
-					ToValue,
-					KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(time)),
-					new KeySpline(0.5, 1.0, 0.5, 1.0)
-					)
-				);
+				ToValue,
+				KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(time)),
+				new KeySpline(0.5, 1, 0.5, 1)));
 
-			if (onCompleted != null)
-			{
-				keyFramesAnimation.Completed += onCompleted;
-			}
-
-			LastAppliedAnimation = keyFramesAnimation;
-			LastAppliedAnimation_onCompleted = onCompleted;
+			keyFramesAnimation.SetValue(Timeline.DesiredFrameRateProperty, 120);
 
 			editor.BeginAnimation(Editor.VerticalOffsetProperty, keyFramesAnimation, HandoffBehavior.Compose);
 		}

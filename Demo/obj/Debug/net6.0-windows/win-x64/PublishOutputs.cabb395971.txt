@@ -1,0 +1,3 @@
+D:\VS_Builds\CrackED\Demo.pdb
+D:\VS_Builds\CrackED\CrackED.pdb
+D:\VS_Builds\CrackED\Demo.exe

@@ -26,7 +26,7 @@ namespace CrackED
             {
                 return;
             }
-
+            
             PathGeometry Geometry = new PathGeometry();
 
             double YOffset = 0;

@@ -25,7 +25,7 @@ namespace CrackED
         {
             Owner = owner;
 
-            Caret_blink.Interval = CaretBlinkInterval;
+            Caret_blink.Interval = Owner.CaretBlinkInterval;
             Caret_blink.Elapsed += (sender, e) =>
             {
                 IsVisible = !IsVisible;
@@ -34,7 +34,7 @@ namespace CrackED
             };
             Caret_blink.Start();
 
-            Caret_blink_timeout.Interval = CaretBlinkTimeout;
+            Caret_blink_timeout.Interval = Owner.CaretBlinkTimeout;
             Caret_blink_timeout.Elapsed += (sender, e) =>
             {
                 Caret_blink.Start();
@@ -45,8 +45,8 @@ namespace CrackED
         #region Internal fields
         internal bool IsVisible = true;
 
-        private System.Timers.Timer Caret_blink = new System.Timers.Timer();
-        private System.Timers.Timer Caret_blink_timeout = new System.Timers.Timer();
+        internal System.Timers.Timer Caret_blink = new System.Timers.Timer();
+        internal System.Timers.Timer Caret_blink_timeout = new System.Timers.Timer();
 
         internal Editor Owner;
 
@@ -54,19 +54,11 @@ namespace CrackED
         #endregion
 
         #region Public fields
-        public double CaretWidth = 2;
-
         public int SelectionStartOffset = 0;
         public int SelectionStartLine = 0;
 
         public int CurentOffset = 0;
         public int CurentLine = 0;
-
-        public double CaretBlinkInterval = 500d;
-        public double CaretBlinkTimeout = 1000d;
-
-        public double MinSelectionWidth = 5d;
-        public bool FullWidthSelections = false;
         #endregion
 
         #region Helper functions
@@ -143,7 +135,7 @@ namespace CrackED
         {
             if(Owner.IsDocumentPositionInView(CurentOffset, CurentLine))
             {
-                drawingContext.DrawRectangle(Brushes.White, new Pen(Brushes.Black, 0), new Rect(Owner.Lines[CurentLine].VisualDistanceToIndex(CurentOffset), (CurentLine - Owner.FirstVisibleLine) * Owner.LineHeight, CaretWidth, Owner.LineHeight));
+                drawingContext.DrawRectangle(Owner.CaretBrush, new Pen(Brushes.Black, 0), new Rect(Owner.Lines[CurentLine].VisualDistanceToIndex(CurentOffset), (CurentLine - Owner.FirstVisibleLine) * Owner.LineHeight, Owner.CaretWidth, Owner.LineHeight));
             }
         }
 
@@ -176,7 +168,7 @@ namespace CrackED
                         break;
                     }
 
-                    double curent_lineWidth = FullWidthSelections ? Owner.RenderArea.ActualWidth : Owner.Lines[Owner.FirstVisibleLine + i].VisualDistanceToIndex(Owner.Lines[Owner.FirstVisibleLine + i].WidthTree.Count - 1);
+                    double curent_lineWidth = Owner.FullWidthSelections ? Owner.RenderArea.ActualWidth : Owner.Lines[Owner.FirstVisibleLine + i].VisualDistanceToIndex(Owner.Lines[Owner.FirstVisibleLine + i].WidthTree.Count - 1);
 
                     if (i == (selection.Value.StartLine - Owner.FirstVisibleLine))
                     {
@@ -190,7 +182,7 @@ namespace CrackED
                     }
                     else
                     {
-                        g.AddGeometry(new RectangleGeometry(new Rect(new Point(0, i * Owner.LineHeight), new Point(Math.Max(curent_lineWidth, MinSelectionWidth), (i + 1) * Owner.LineHeight)), 0, 0));
+                        g.AddGeometry(new RectangleGeometry(new Rect(new Point(0, i * Owner.LineHeight), new Point(Math.Max(curent_lineWidth, Owner.MinSelectionWidth), (i + 1) * Owner.LineHeight)), 0, 0));
                         lineSegmentsRendered++;
                     }
                 }

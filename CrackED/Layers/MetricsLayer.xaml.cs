@@ -53,7 +53,7 @@ namespace CrackED
                         new Typeface("Consolas"),
                         12, System.Windows.Media.Brushes.Lime, 1);
 
-                    drawingContext.DrawRectangle(Brushes.Black, new Pen(Brushes.Black, 0), new Rect(this.ActualWidth - text.Width, i * text.Height, text.Width, 12));
+                    drawingContext.DrawRectangle(Brushes.Black, new Pen(Brushes.Black, 0), new Rect(this.ActualWidth - text.Width, i * text.Height, text.Width, text.Height));
                     drawingContext.DrawText(text, new Point(this.ActualWidth - text.Width, i * text.Height));
                 }
             }
