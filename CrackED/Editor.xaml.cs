@@ -56,7 +56,7 @@ namespace CrackED
         public new Brush Background = new SolidColorBrush(Color.FromArgb(255, 38, 38, 38));
 
         public double LineHeight = 24;
-        public double VerticalTextOffset = -4;
+        public double VerticalTextOffset = -3;
 
         public double MinScrollAnimationSpeed = 360d;
         public double MaxScrollAnimationSpeed = 720d;
