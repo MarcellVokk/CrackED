@@ -8,6 +8,8 @@
     <Title>CrackED</Title>
     <PackageProjectUrl>https://github.com/Vadkarika2/CrackED</PackageProjectUrl>
     <Authors>Gazdag Marcell</Authors>
+    <Description>A performance-oriented text/code editor component for WPF.</Description>
+    <PackageTags>text editor,text,editor,code editor,.net,.net core,wpf</PackageTags>
   </PropertyGroup>
 
 </Project>
