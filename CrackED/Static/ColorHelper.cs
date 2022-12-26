@@ -69,7 +69,7 @@ namespace CrackED
 
         public static Color HSVToRGB(HSVColor color)
         {
-            return HSVToRGB(color.hue, color.saturation, color.value);
+            return HSVToRGB(color.Hue, color.Saturation, color.Value);
         }
     }
 
@@ -77,9 +77,9 @@ namespace CrackED
     {
         public HSVColor(double hue, double saturation, double value)
         {
-            this.hue = (int)Math.Round(hue, 0);
-            this.saturation = (int)Math.Round(saturation, 0);
-            this.value = (int)Math.Round(value, 0);
+            this.Hue = (int)Math.Round(hue, 0);
+            this.Saturation = (int)Math.Round(saturation, 0);
+            this.Value = (int)Math.Round(value, 0);
         }
 
         public HSVColor()
@@ -87,8 +87,8 @@ namespace CrackED
 
         }
 
-        public int hue { get; set; }
-        public int saturation { get; set; }
-        public int value { get; set; }
+        public int Hue { get; set; }
+        public int Saturation { get; set; }
+        public int Value { get; set; }
     }
 }

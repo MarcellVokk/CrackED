@@ -4,6 +4,10 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>CrackED</Title>
+    <PackageProjectUrl>https://github.com/Vadkarika2/CrackED</PackageProjectUrl>
+    <Authors>Gazdag Marcell</Authors>
   </PropertyGroup>
 
 </Project>
