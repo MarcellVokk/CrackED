@@ -8,6 +8,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <CrackED:Editor x:Name="Editor"></CrackED:Editor>
+        <CrackED:Editor x:Name="Editor" Margin="0,0,0,30"></CrackED:Editor>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Height="30" Background="Black">
+            <Button Click="Button_Click">test higlight</Button>
+        </StackPanel>
     </Grid>
 </Window>

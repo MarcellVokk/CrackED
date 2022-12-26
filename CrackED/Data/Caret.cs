@@ -51,14 +51,15 @@ namespace CrackED
         internal Editor Owner;
 
         internal CaretState MainCaretState = CaretState.CaretVisible;
+
+        private int SelectionStartOffset = 0;
+        private int SelectionStartLine = 0;
         #endregion
 
         #region Public fields
-        public int SelectionStartOffset = 0;
-        public int SelectionStartLine = 0;
-
-        public int CurentOffset = 0;
-        public int CurentLine = 0;
+        public int UnclampedOffset { get; private set; } = 0;
+        public int CurentOffset { get; private set; } = 0;
+        public int CurentLine { get; private set; } = 0;
         #endregion
 
         #region Helper functions
@@ -66,17 +67,27 @@ namespace CrackED
         {
             DocumentPosition validatedPosition = ValidatePosition(offset, line);
 
-            if(true)
+            PauseCaretBlink();
+
+            CurentLine = validatedPosition.Line;
+            CurentOffset = validatedPosition.Offset;
+            UnclampedOffset = offset;
+
+            Owner.SelectionLayer.Repaint();
+            Owner.CaretLayer.Repaint();
+
+            ResumeCaretBlink();
+        }
+
+        public void ScrollIntoView()
+        {
+            if(CurentLine + 2 > Owner.FirstRenderedLine + (Owner.LinesToRender - Owner.ExtraLines))
             {
-                PauseCaretBlink();
-
-                CurentLine = validatedPosition.Line;
-                CurentOffset = validatedPosition.Offset;
-
-                Owner.SelectionLayer.Repaint();
-                Owner.CaretLayer.Repaint();
-
-                ResumeCaretBlink();
+                Owner.SetVerticalOffset((CurentLine + 2 - (Owner.LinesToRender - Owner.ExtraLines)) * Owner.LineHeight);
+            }
+            else if (CurentLine - 1 < Owner.FirstRenderedLine)
+            {
+                Owner.SetVerticalOffset((CurentLine - 1) * Owner.LineHeight);
             }
         }
 
@@ -96,8 +107,8 @@ namespace CrackED
 
         public DocumentPosition ValidatePosition(int offset, int line)
         {
-            line = Math.Min(line, Owner.Lines.Count - 1);
-            offset = Math.Min(offset, Owner.Lines[line].Chars.Count);
+            line = Math.Min(Math.Max(0, line), Owner.Lines.Count - 1);
+            offset = Math.Min(Math.Max(0, offset), Owner.Lines[line].Content.TextLenght);
 
             return new DocumentPosition(offset, line);
         }
@@ -135,7 +146,7 @@ namespace CrackED
         {
             if(Owner.IsDocumentPositionInView(CurentOffset, CurentLine))
             {
-                drawingContext.DrawRectangle(Owner.CaretBrush, new Pen(Brushes.Black, 0), new Rect(Owner.Lines[CurentLine].VisualDistanceToIndex(CurentOffset), (CurentLine - Owner.FirstVisibleLine) * Owner.LineHeight, Owner.CaretWidth, Owner.LineHeight));
+                drawingContext.DrawRectangle(Owner.CaretBrush, new Pen(Brushes.Black, 0), new Rect(Owner.Lines[CurentLine].VisualDistanceToIndex(CurentOffset), (CurentLine - Owner.FirstRenderedLine) * Owner.LineHeight, Owner.CaretWidth, Owner.LineHeight));
             }
         }
 
@@ -159,7 +170,7 @@ namespace CrackED
                 double startX = Owner.Lines[selection.Value.StartLine].VisualDistanceToIndex(selection.Value.StartOffset);
                 double endX = Owner.Lines[selection.Value.EndLine].VisualDistanceToIndex(selection.Value.EndOffset);
 
-                for (int i = Math.Max(selection.Value.StartLine - Owner.FirstVisibleLine, 0); i <= Math.Min(selection.Value.EndLine - Owner.FirstVisibleLine, Owner.LinesOnScreen - 1); i++)
+                for (int i = Math.Max(selection.Value.StartLine - Owner.FirstRenderedLine, 0); i <= Math.Min(selection.Value.EndLine - Owner.FirstRenderedLine, Owner.LinesToRender - 1); i++)
                 {
                     if(selection.Value.StartLine == selection.Value.EndLine)
                     {
@@ -168,14 +179,14 @@ namespace CrackED
                         break;
                     }
 
-                    double curent_lineWidth = Owner.FullWidthSelections ? Owner.RenderArea.ActualWidth : Owner.Lines[Owner.FirstVisibleLine + i].VisualDistanceToIndex(Owner.Lines[Owner.FirstVisibleLine + i].WidthTree.Count - 1);
+                    double curent_lineWidth = Owner.FullWidthSelections ? Owner.RenderArea.ActualWidth : Owner.Lines[Owner.FirstRenderedLine + i].VisualDistanceToIndex(-1);
 
-                    if (i == (selection.Value.StartLine - Owner.FirstVisibleLine))
+                    if (i == (selection.Value.StartLine - Owner.FirstRenderedLine))
                     {
                         g.AddGeometry(new RectangleGeometry(new Rect(new Point(startX, i * Owner.LineHeight), new Point(curent_lineWidth, (i + 1) * Owner.LineHeight)), 0, 0));
                         lineSegmentsRendered++;
                     }
-                    else if (i == (selection.Value.EndLine - Owner.FirstVisibleLine))
+                    else if (i == (selection.Value.EndLine - Owner.FirstRenderedLine))
                     {
                         g.AddGeometry(new RectangleGeometry(new Rect(new Point(0, i * Owner.LineHeight), new Point(endX, (i + 1) * Owner.LineHeight)), 0, 0));
                         lineSegmentsRendered++;

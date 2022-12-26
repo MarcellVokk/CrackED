@@ -10,7 +10,9 @@
         <ResourceDictionary Source="Resources/Theme.xaml"/>
     </UserControl.Resources>
     <Grid>
-        <Grid x:Name="RenderArea" ClipToBounds="True" Margin="0,0,17,0" Cursor="IBeam" Background="Transparent" MouseDown="UserControl_MouseDown" MouseUp="UserControl_MouseUp" MouseMove="UserControl_MouseMove"></Grid>
-        <ScrollBar Style="{DynamicResource ScrollBar_Theme}" x:Name="VerticalScrollBar" HorizontalAlignment="Right" ValueChanged="VerticalScrollBar_ValueChanged" ViewportSize="{Binding ElementName=VerticalScrollBar, Path=ActualHeight}"></ScrollBar>
+        <Grid x:Name="RenderArea" ClipToBounds="True" Margin="0,0,17,17" Cursor="IBeam" Background="Transparent" MouseDown="UserControl_MouseDown" MouseUp="UserControl_MouseUp" MouseMove="UserControl_MouseMove"></Grid>
+        <ScrollBar Style="{DynamicResource ScrollBar_Theme}" x:Name="VerticalScrollBar" HorizontalAlignment="Right" ValueChanged="VerticalScrollBar_ValueChanged" ViewportSize="{Binding ElementName=VerticalScrollBar, Path=ActualHeight}"/>
+        <ScrollBar Style="{DynamicResource ScrollBar_Theme}" Orientation="Horizontal" Margin="0,0,17,0" x:Name="HorizontalScrollBar" VerticalAlignment="Bottom" ValueChanged="HorizontalScrollBar_ValueChanged" ViewportSize="{Binding ElementName=HorizontalScrollBar, Path=ActualWidth}" Maximum="0"/>
+
     </Grid>
 </UserControl>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,13 +31,14 @@ namespace CrackED
             PathGeometry Geometry = new PathGeometry();
 
             double YOffset = 0;
-            for (int i = Owner.Owner.FirstVisibleLine; i < Math.Min(Owner.Owner.Lines.Count, Owner.Owner.LinesOnScreen + Owner.Owner.FirstVisibleLine); i++)
+            Debug.WriteLine(Owner.Owner.FirstRenderedLine + " > " + Math.Min(Owner.Owner.Lines.Count, Owner.Owner.FirstRenderedLine + Owner.Owner.LinesToRender) + " lc: " + Owner.Owner.Lines.Count);
+            for (int i = Owner.Owner.FirstRenderedLine; i < Math.Min(Owner.Owner.Lines.Count, Owner.Owner.FirstRenderedLine + Owner.Owner.LinesToRender); i++)
             {
-                string Text = Owner.Owner.Lines[i].ToString();
+                string Text = Owner.Owner.Lines[i].Content.ToText();
                 int NextIndex = Text.IndexOf(SearchTerm, 0);
                 double XOffset;
 
-                while (NextIndex != -1 && Owner.Owner.Lines[i].IsOffsetVisible(NextIndex + SearchTerm.Length))
+                while (NextIndex != -1 && Owner.Owner.IsDocumentPositionInView(NextIndex + SearchTerm.Length, i))
                 {
                     XOffset = Owner.Owner.Lines[i].VisualDistanceToIndex(NextIndex);
 
@@ -59,7 +61,7 @@ namespace CrackED
                 {
                     int result = startIndex;
 
-                    while (Owner.Owner.Lines[i].IsOffsetVisible(result + SearchTerm.Length + 1))
+                    while (Owner.Owner.IsDocumentPositionInView(result + SearchTerm.Length + 1, i))
                     {
                         int next = Text.IndexOf(SearchTerm, result + SearchTerm.Length);
 

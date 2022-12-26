@@ -13,30 +13,31 @@ namespace CrackED
 {
     public class VirtualLine
     {
-        public Editor Owner;
-        public List<string> Chars = new List<string>();
-        public List<double> WidthTree = new List<double>();
-        public List<StyleSpan> StyleSpans = new List<StyleSpan>();
+        public LineContent Content = new LineContent();
+
+        internal Editor Owner;
+        internal List<double> WidthTree = new List<double> { 0d };
+        private SortedList<int, StyleSpan> StyleSpans = new SortedList<int, StyleSpan>();
 
         public VirtualLine(Editor owner)
         {
             Owner = owner;
         }
 
+        public void AddSpan(StyleSpan span)
+        {
+            StyleSpans.Add(-span.Start, span);
+        }
+
+        public void ClearSpans()
+        {
+            StyleSpans.Clear();
+        }
+
         public double VisualDistanceToIndex(int index)
         {
-            if(WidthTree.Count == 0) { return 0; }
-            return index < WidthTree.Count ? (index >= 0 ? WidthTree[index] : 0) : Owner.RenderArea.ActualWidth;
-        }
-
-        public override string ToString()
-        {
-            return string.Join("", Chars);
-        }
-
-        public bool IsOffsetVisible(int offset)
-        {
-            return WidthTree.Count > offset;
+            if(index == -1) { return WidthTree.LastOrDefault(0); }
+            return index < WidthTree.Count ? (index >= 0 ? WidthTree[index] : -1) : -1;
         }
 
         public void Draw(DrawingContext drawingContext, int visualPosition)
@@ -45,10 +46,12 @@ namespace CrackED
 
             double XOffset = 0;
             int DrawnUntil = 0;
-            string Text = this.ToString();
+            string Text = Content.ToText();
             bool BreakFlag = false;
 
-            Stack<StyleSpan> StyleStack = new Stack<StyleSpan>(this.StyleSpans.OrderByDescending(x => x.Start));
+            int c = 0;
+
+            Stack<StyleSpan> StyleStack = new Stack<StyleSpan>(StyleSpans.Values);
             StyleSpan? CurentStyle;
             Pop();
 
@@ -56,20 +59,23 @@ namespace CrackED
             {
                 if (CurentStyle != null && CurentStyle.Start == DrawnUntil)
                 {
-                    drawingContext.DrawGlyphRun(CurentStyle.Foreground, GetNextSection(CurentStyle.Lenght));
-                    DrawnUntil = CurentStyle.Start + CurentStyle.Lenght;
+                    c++;
+                    drawingContext.DrawGlyphRun(CurentStyle.Foreground, GetNextSection(ValidateCurentStyleLenght(), GetTypeface(CurentStyle)));
+                    DrawnUntil = CurentStyle.Start + ValidateCurentStyleLenght();
 
                     Pop();
                 }
                 else if (CurentStyle != null)
                 {
-                    drawingContext.DrawGlyphRun(Owner.Foreground, GetNextSection(CurentStyle.Start - DrawnUntil));
+                    c++;
+                    drawingContext.DrawGlyphRun(Owner.Foreground, GetNextSection(CurentStyle.Start - DrawnUntil, Owner.Typeface_Regular));
                     DrawnUntil = CurentStyle.Start;
                 }
 
                 if (CurentStyle == null && !BreakFlag)
                 {
-                    drawingContext.DrawGlyphRun(Owner.Foreground, GetNextSection(Text.Length - DrawnUntil));
+                    c++;
+                    drawingContext.DrawGlyphRun(Owner.Foreground, GetNextSection(Text.Length - DrawnUntil, Owner.Typeface_Regular));
                     break;
                 }
             }
@@ -77,12 +83,16 @@ namespace CrackED
             WidthTree.Add(XOffset);
 
 
-
             void Pop()
             {
                 if (StyleStack.Count > 0)
                 {
                     CurentStyle = StyleStack.Pop();
+
+                    if (CurentStyle.Start < DrawnUntil)
+                    {
+                        Pop();
+                    }
                 }
                 else
                 {
@@ -90,7 +100,7 @@ namespace CrackED
                 }
             }
 
-            GlyphRun GetNextSection(int sectionLenght)
+            GlyphRun GetNextSection(int sectionLenght, GlyphTypeface typeface)
             {
                 List<ushort> glyphIndices = new List<ushort>();
                 List<double> advanceWidths = new List<double>();
@@ -98,18 +108,18 @@ namespace CrackED
 
                 for (int i = DrawnUntil; i < DrawnUntil + sectionLenght; ++i)
                 {
-                    if(i >= Text.Length)
+                    if (i >= Text.Length || i > 10000)
                     {
                         BreakFlag = true;
                         break;
                     }
 
-                    ushort glyphIndex = Owner.Typeface.CharacterToGlyphMap['?'];
-                    if (Owner.Typeface.CharacterToGlyphMap.ContainsKey(Text[i]))
+                    ushort glyphIndex = typeface.CharacterToGlyphMap['?'];
+                    if (typeface.CharacterToGlyphMap.ContainsKey(Text[i]))
                     {
-                        glyphIndex = Owner.Typeface.CharacterToGlyphMap[Text[i]];
+                        glyphIndex = typeface.CharacterToGlyphMap[Text[i]];
                     }
-                    double advanceWidth = Owner.Typeface.AdvanceWidths[glyphIndex] * Owner.FontSize;
+                    double advanceWidth = typeface.AdvanceWidths[glyphIndex] * Owner.FontSize;
 
                     glyphIndices.Add(glyphIndex);
                     advanceWidths.Add(advanceWidth);
@@ -117,24 +127,25 @@ namespace CrackED
                     WidthTree.Add(XOffset + sectionWidth);
                     sectionWidth += advanceWidth;
 
-                    if (XOffset > Owner.RenderArea.ActualWidth - Owner.HorizontalTransform)
+                    if (XOffset + sectionWidth > Owner.RenderArea.ActualWidth - Owner.HorizontalTransform)
                     {
                         BreakFlag = true;
+                        Debug.WriteLine("break");
                         break;
                     }
                 }
 
-                if(glyphIndices.Count > 0)
+                if (glyphIndices.Count > 0)
                 {
                     GlyphRun gl = new GlyphRun
                       (
-                          Owner.Typeface,
+                          typeface,
                           bidiLevel: 0,
                           isSideways: false,
                           renderingEmSize: Owner.FontSize,
                           pixelsPerDip: (float)VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip,   //  Only in higher versions  .NET  Only this parameter 
                           glyphIndices: glyphIndices,
-                          baselineOrigin: new Point(XOffset, (visualPosition - Owner.FirstVisibleLine) * Owner.LineHeight + (Owner.Typeface.Height * Owner.FontSize) + Owner.LineHeight / 2 - Owner.Typeface.Height * Owner.FontSize / 2 + Owner.VerticalTextOffset),     //  Set the offset of the text 
+                          baselineOrigin: new Point(XOffset, (visualPosition - Owner.FirstRenderedLine) * Owner.LineHeight + (typeface.Height * Owner.FontSize) + Owner.LineHeight / 2 - typeface.Height * Owner.FontSize / 2 + Owner.VerticalTextOffset),     //  Set the offset of the text 
                           advanceWidths: advanceWidths, //  Set the word width of each character , That's the brand name 
                           glyphOffsets: null,           //  Set the offset of each character , Can be null 
                           characters: null,
@@ -150,6 +161,39 @@ namespace CrackED
                 }
 
                 return null;
+            }
+
+            int ValidateCurentStyleLenght()
+            {
+                int result = CurentStyle.Lenght == -1 ? Text.Length - CurentStyle.Start : CurentStyle.Lenght;
+
+                return result;
+            }
+        }
+
+        private GlyphTypeface GetTypeface(StyleSpan styleSpan)
+        {
+            if (styleSpan.IsBold)
+            {
+                if (styleSpan.IsItalic)
+                {
+                    return Owner.Typeface_BoldItalic;
+                }
+                else
+                {
+                    return Owner.Typeface_Bold;
+                }
+            }
+            else
+            {
+                if (styleSpan.IsItalic)
+                {
+                    return Owner.Typeface_RegularItalic;
+                }
+                else
+                {
+                    return Owner.Typeface_Regular;
+                }
             }
         }
     }

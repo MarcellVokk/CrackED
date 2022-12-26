@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace CrackED
 {
@@ -30,19 +31,49 @@ namespace CrackED
             InitializeComponent();
 
             Owner = owner;
+
+            ImmediateRendering = Owner.ImmediateRendering;
+
+            if (ImmediateRendering)
+            {
+                CompositionTarget.Rendering += CompositionTarget_Rendering;
+            }
+        }
+
+        public void ReInitialize()
+        {
+            if (!ImmediateRendering && Owner.ImmediateRendering)
+            {
+                CompositionTarget.Rendering += CompositionTarget_Rendering;
+            }
+            else if(ImmediateRendering && !Owner.ImmediateRendering)
+            {
+                CompositionTarget.Rendering -= CompositionTarget_Rendering;
+            }
+
+            ImmediateRendering = Owner.ImmediateRendering;
+        }
+
+        private void CompositionTarget_Rendering(object? sender, EventArgs e)
+        {
+            InvalidateVisual();
         }
 
         public void Repaint(bool repaintSelection)
         {
-            RepaintRequested = true;
-            RepaintSelectionRequested = repaintSelection;
+            if (!ImmediateRendering)
+            {
+                RepaintRequested = true;
+                RepaintSelectionRequested = repaintSelection;
 
-            InvalidateVisual();
+                InvalidateVisual();
+            }
         }
 
-        private bool RepaintRequested = false;
-        private bool RepaintSelectionRequested = false;
+        internal bool RepaintRequested = false;
+        internal bool RepaintSelectionRequested = false;
 
+        private bool ImmediateRendering = false;
         private int Debug_FrameCount = 0;
         private int Debug_Fps = 0;
         private DateTime Debug_LastSecondFrame;
@@ -50,19 +81,16 @@ namespace CrackED
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            if (RepaintRequested)
+            if (RepaintRequested || ImmediateRendering)
             {
                 RepaintRequested = false;
 
+                Stopwatch sw = Stopwatch.StartNew();
                 Owner.TransformDrawingContext(ref drawingContext);
 
-                Debug.WriteLine("Render: TextViewLayer");
-
-                Stopwatch sw = Stopwatch.StartNew();
-
-                for (int i = Owner.FirstVisibleLine; i < Math.Min(Owner.Lines.Count, Owner.LinesOnScreen + Owner.FirstVisibleLine); i++)
+                for (int i = Owner.FirstRenderedLine; i < Math.Min(Owner.Lines.Count, Owner.LinesToRender + Owner.FirstRenderedLine); i++)
                 {
-                    if (Owner.Lines[i].Chars.Count == 0)
+                    if (Owner.Lines[i].Content.TextLenght == 0)
                     {
                         continue;
                     }
@@ -84,7 +112,7 @@ namespace CrackED
 
                 Owner.DrawMetrics(Debug_Fps + " fps (longest frame: " + LongestFrameTime + " ms)");
 
-                if (RepaintSelectionRequested)
+                if (RepaintSelectionRequested || ImmediateRendering)
                 {
                     RepaintSelectionRequested = false;
                     Owner.SelectionLayer.Repaint();
